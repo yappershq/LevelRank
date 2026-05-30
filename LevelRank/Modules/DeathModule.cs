@@ -58,7 +58,19 @@ internal class DeathModule : IModule
 
     private void OnPlayerKilledPre(IPlayerKilledForwardParams @params)
     {
-        _victimIsHostageCarrier = @params.Pawn.GetHostageService() is { } hostageService
+        _victimIsHostageCarrier = false;
+
+        if (@params.Controller is not { IsValidEntity: true } controller)
+        {
+            return;
+        }
+
+        if (controller.GetPlayerPawn() is not { IsValidEntity: true } pawn)
+        {
+            return;
+        }
+
+        _victimIsHostageCarrier = pawn.GetHostageService() is { } hostageService
                                   && hostageService.CarriedHostageHandle.IsValid();
     }
 
