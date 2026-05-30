@@ -76,7 +76,7 @@ internal class MessageModule : IModule, IMessageModule
         }
 
         var localizeManager = _bridge.GetLocalizerManager();
-        var localizer       = localizeManager.GetLocalizer(client);
+        var localizer       = localizeManager.For(client);
 
         using var sb = ZString.CreateStringBuilder();
         using var actionKeySb = ZString.CreateStringBuilder();
@@ -85,7 +85,7 @@ internal class MessageModule : IModule, IMessageModule
         sb.Append(_colors.Prefix);
         sb.Append("[LevelRank] ");
         sb.Append(_colors.ScoreLabel);
-        sb.Append(localizer.TryGet("LevelRank.TotalScore") ?? "Score");
+        sb.Append(localizer.Text("LevelRank.TotalScore"));
         sb.Append(": ");
         sb.Append(_colors.ScoreValue);
         sb.Append(newTotalScore);
@@ -101,7 +101,7 @@ internal class MessageModule : IModule, IMessageModule
             actionKeySb.Clear();
             actionKeySb.Append(ActionKeyPrefix);
             actionKeySb.Append(action);
-            var reasonText = localizer.TryGet(actionKeySb.ToString()) ?? action.ToString();
+            var reasonText = localizer.Text(actionKeySb.ToString());
 
             sb.Append(score >= 0 ? _colors.ScoreGain : _colors.ScoreLoss);
             if (score >= 0)

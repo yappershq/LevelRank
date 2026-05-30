@@ -342,3 +342,7 @@ healthchecksdb
 # Build output directories
 sharp/modules/
 sharp/shared/
+
+# Build artifact zips
+sharp/sharp.zip
+shared/shared.zip
