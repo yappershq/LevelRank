@@ -18,6 +18,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\LevelRank.Shared\LevelRank.Shared.csproj" />
+		<!-- Private=false: load LevelRank.Shared from /game/sharp/shared/, don't copy a second copy. -->
+		<ProjectReference Include="..\LevelRank.Shared\LevelRank.Shared.csproj" Private="false" />
 	</ItemGroup>
 </Project>

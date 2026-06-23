@@ -1,8 +1,22 @@
 <Project>
 	<PropertyGroup>
 		<LangVersion>14</LangVersion>
-		<OutputPath>$(MSBuildThisFileDirectory).build/modules/LevelRank</OutputPath>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+		<!-- True for the contract project (LevelRank.Shared); false for the two module projects
+		     (LevelRank, LevelRank.RequestManager — both implement IModSharpModule). -->
+		<IsSharedProject>$([System.String]::new('$(MSBuildProjectName)').EndsWith('.Shared'))</IsSharedProject>
+	</PropertyGroup>
+
+	<!-- Shared contract -> .build/shared/<name>/ -> /game/sharp/shared/. Loaded once as a shared
+	     library so BOTH module ALCs unify the LevelRank.Shared type identity (PreferSharedTypes). -->
+	<PropertyGroup Condition="'$(IsSharedProject)' == 'true'">
+		<OutputPath>$(MSBuildThisFileDirectory).build/shared/$(MSBuildProjectName)</OutputPath>
+	</PropertyGroup>
+
+	<!-- Each module gets its OWN dir (exactly one *.deps.json per dir) — ModSharp picks a module
+	     dir's entry via the first *.deps.json it finds, so a dir must never hold more than one. -->
+	<PropertyGroup Condition="'$(IsSharedProject)' != 'true'">
+		<OutputPath>$(MSBuildThisFileDirectory).build/modules/$(MSBuildProjectName)</OutputPath>
 	</PropertyGroup>
 </Project>

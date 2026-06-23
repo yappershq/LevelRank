@@ -17,7 +17,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\LevelRank.Shared\LevelRank.Shared.csproj" />
+		<!-- Private=false: don't copy LevelRank.Shared.dll into this module's dir; it loads from
+		     /game/sharp/shared/ so both modules unify the type identity. -->
+		<ProjectReference Include="..\LevelRank.Shared\LevelRank.Shared.csproj" Private="false" />
 	</ItemGroup>
 </Project>
 
