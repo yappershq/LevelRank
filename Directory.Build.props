@@ -15,8 +15,12 @@
 	</PropertyGroup>
 
 	<!-- Each module gets its OWN dir (exactly one *.deps.json per dir) — ModSharp picks a module
-	     dir's entry via the first *.deps.json it finds, so a dir must never hold more than one. -->
+	     dir's entry via the first *.deps.json it finds, so a dir must never hold more than one.
+	     CopyLocalLockFileAssemblies ships NuGet runtime deps (ZString, SqlSugar, Npgsql, …) into the
+	     module dir; the ModSharp.Sharp.* refs use ExcludeAssets="runtime" so framework DLLs are NOT
+	     duplicated (the host provides them — shipping a copy causes TypeLoad identity mismatch). -->
 	<PropertyGroup Condition="'$(IsSharedProject)' != 'true'">
 		<OutputPath>$(MSBuildThisFileDirectory).build/modules/$(MSBuildProjectName)</OutputPath>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	</PropertyGroup>
 </Project>
