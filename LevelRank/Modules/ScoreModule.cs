@@ -1,8 +1,6 @@
 using LevelRank.Managers;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sharp.Shared.Enums;
-using Sharp.Shared.Listeners;
 using Sharp.Shared.Objects;
 
 namespace LevelRank.Modules;
@@ -16,7 +14,7 @@ internal interface IScoreModule
     int GetScoreForAction(ScoreAction action);
 }
 
-internal class ScoreModule : IModule, IScoreModule, IClientListener, IGameListener
+internal class ScoreModule : IModule, IScoreModule
 {
     private readonly InterfaceBridge      _bridge;
     private readonly ILogger<ScoreModule> _logger;
@@ -38,8 +36,6 @@ internal class ScoreModule : IModule, IScoreModule, IClientListener, IGameListen
     private readonly IConVar _minPlayers;
     private readonly IConVar _defaultScore;
 
-    private int _playerCount;
-
     public ScoreModule(InterfaceBridge      bridge,
                        IConfigManager       configManager,
                        ILogger<ScoreModule> logger)
@@ -47,7 +43,7 @@ internal class ScoreModule : IModule, IScoreModule, IClientListener, IGameListen
         _bridge = bridge;
         _logger = logger;
 
-        _minPlayers   = configManager.CreateConVar("lr_min_players",    4,    "Minimum players required to enable rank");
+        _minPlayers   = configManager.CreateConVar("lr_min_players",    5,    "Minimum active (T/CT) players required to enable rank");
         _defaultScore = configManager.CreateConVar("lr_default_score", 1100, "Default score for new players");
 
         _killReward          = configManager.CreateConVar("lr_score_kill",           3,  "Score reward for a kill");
@@ -72,43 +68,7 @@ internal class ScoreModule : IModule, IScoreModule, IClientListener, IGameListen
 
     public bool Init()
     {
-        _bridge.ClientManager.InstallClientListener(this);
-        _bridge.ModSharp.InstallGameListener(this);
-
         return true;
-    }
-
-    public void OnPostInit(ServiceProvider provider)
-    {
-    }
-
-    public void Shutdown()
-    {
-        _bridge.ClientManager.RemoveClientListener(this);
-        _bridge.ModSharp.RemoveGameListener(this);
-    }
-
-    public int ListenerVersion  => IClientListener.ApiVersion;
-    public int ListenerPriority => 1;
-
-    public void OnClientPutInServer(IGameClient client)
-    {
-        if (client.IsFakeClient || client.IsHltv)
-        {
-            return;
-        }
-
-        Interlocked.Increment(ref _playerCount);
-    }
-
-    public void OnClientDisconnected(IGameClient client, NetworkDisconnectionReason reason)
-    {
-        if (client.IsFakeClient || client.IsHltv)
-        {
-            return;
-        }
-
-        Interlocked.Decrement(ref _playerCount);
     }
 
     public int DefaultScore => _defaultScore.GetInt32();
@@ -124,7 +84,27 @@ internal class ScoreModule : IModule, IScoreModule, IClientListener, IGameListen
                 return true;
             }
 
-            return _playerCount >= minPlayers;
+            // Anti-abuse: count only humans actively on T or CT.
+            // Spectators, observers, and HLTV/bots are excluded so that
+            // spectating alts cannot pad the threshold to enable point farming.
+            var activePlayers = 0;
+
+            foreach (var client in _bridge.ClientManager.GetGameClients(true))
+            {
+                if (client.IsFakeClient || client.IsHltv)
+                {
+                    continue;
+                }
+
+                var team = client.GetPlayerController()?.Team ?? CStrikeTeam.UnAssigned;
+
+                if (team == CStrikeTeam.TE || team == CStrikeTeam.CT)
+                {
+                    activePlayers++;
+                }
+            }
+
+            return activePlayers >= minPlayers;
         }
     }
 

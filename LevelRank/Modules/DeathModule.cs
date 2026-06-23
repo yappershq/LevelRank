@@ -110,6 +110,16 @@ internal class DeathModule : IModule
             return;
         }
 
+        // Spectator-exclusion: skip players not actively on T or CT at the moment of
+        // death processing. Handles the edge case of a player dying during a team-change
+        // transition (controller.Team already updated to Spectator before event fires).
+        var controllerTeam = client.GetPlayerController()?.Team ?? CStrikeTeam.UnAssigned;
+
+        if (controllerTeam is not (CStrikeTeam.TE or CStrikeTeam.CT))
+        {
+            return;
+        }
+
         if (_playerManager.GetPlayerRankInfo(client) is not { } victimRank)
         {
             return;
@@ -130,6 +140,15 @@ internal class DeathModule : IModule
         if (attackerSlot < 0
             || _bridge.ClientManager.GetGameClient(attackerSlot) is not { } attacker
             || _playerManager.GetPlayerRankInfo(attackerSlot) is not { } attackerRank)
+        {
+            return;
+        }
+
+        // Spectator-exclusion: skip kill credit if attacker is no longer on T or CT
+        // (e.g., killed while team-change transition was in flight).
+        var attackerTeam = attacker.GetPlayerController()?.Team ?? CStrikeTeam.UnAssigned;
+
+        if (attackerTeam is not (CStrikeTeam.TE or CStrikeTeam.CT))
         {
             return;
         }
@@ -235,7 +254,18 @@ internal class DeathModule : IModule
             return;
         }
 
-        if (ev.AssisterController is not { } assister || _playerManager.GetPlayerRankInfo(assister.PlayerSlot) is not { } rank)
+        if (ev.AssisterController is not { } assister)
+        {
+            return;
+        }
+
+        // Spectator-exclusion: assists from spectating players are not credited.
+        if (assister.Team is not (CStrikeTeam.TE or CStrikeTeam.CT))
+        {
+            return;
+        }
+
+        if (_playerManager.GetPlayerRankInfo(assister.PlayerSlot) is not { } rank)
         {
             return;
         }

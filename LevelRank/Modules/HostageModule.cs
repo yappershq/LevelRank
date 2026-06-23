@@ -1,6 +1,7 @@
 ﻿using LevelRank.Managers;
 using Microsoft.Extensions.Logging;
 using Sharp.Extensions.GameEventManager;
+using Sharp.Shared.Enums;
 using Sharp.Shared.Objects;
 
 namespace LevelRank.Modules;
@@ -46,7 +47,19 @@ internal class HostageModule : IModule
             return;
         }
 
-        if (controller.IsFakeClient || _playerManager.GetPlayerRankInfo(controller.PlayerSlot) is not { } rank)
+        if (controller.IsFakeClient)
+        {
+            return;
+        }
+
+        // Defensive: hostage_rescued can only fire for an active CT, but guard
+        // explicitly so any future regression has a clear team-exclusion barrier.
+        if (controller.Team != CStrikeTeam.CT)
+        {
+            return;
+        }
+
+        if (_playerManager.GetPlayerRankInfo(controller.PlayerSlot) is not { } rank)
         {
             return;
         }

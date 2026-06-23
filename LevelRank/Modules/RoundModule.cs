@@ -72,7 +72,7 @@ internal class RoundModule : IModule
                 continue;
             }
 
-            if (client.GetPlayerController() is not { } controller || controller.GetPlayerPawn() is not { } pawn)
+            if (client.GetPlayerController() is not { } controller)
             {
                 continue;
             }
@@ -82,9 +82,14 @@ internal class RoundModule : IModule
                 continue;
             }
 
-            var team = pawn.Team;
+            // Use controller.Team (authoritative) not pawn.Team.
+            // A spectating player's combat pawn may still exist as a corpse/ragdoll
+            // with pawn.Team == TE or CT, causing them to slip past the Spectator guard
+            // and receive round score. The controller's Team is updated immediately on
+            // team switch and is always authoritative.
+            var team = controller.Team;
 
-            if (team <= CStrikeTeam.Spectator)
+            if (team is not (CStrikeTeam.TE or CStrikeTeam.CT))
             {
                 continue;
             }

@@ -1,6 +1,7 @@
 ﻿using LevelRank.Managers;
 using Microsoft.Extensions.Logging;
 using Sharp.Extensions.GameEventManager;
+using Sharp.Shared.Enums;
 using Sharp.Shared.GameEvents;
 using Sharp.Shared.Objects;
 
@@ -53,7 +54,19 @@ internal class BombModule : IModule
             return;
         }
 
-        if (ev.Controller is not { } controller || _playerManager.GetPlayerRankInfo(controller.PlayerSlot) is not { } rankInfo)
+        if (ev.Controller is not { } controller)
+        {
+            return;
+        }
+
+        // Defensive: bomb_planted can only fire for an active T, but guard explicitly
+        // so any future regression has a clear team-exclusion barrier.
+        if (controller.Team != CStrikeTeam.TE)
+        {
+            return;
+        }
+
+        if (_playerManager.GetPlayerRankInfo(controller.PlayerSlot) is not { } rankInfo)
         {
             return;
         }
@@ -79,7 +92,19 @@ internal class BombModule : IModule
             return;
         }
 
-        if (ev.Controller is not { } controller || _playerManager.GetPlayerRankInfo(controller.PlayerSlot) is not { } rankInfo)
+        if (ev.Controller is not { } controller)
+        {
+            return;
+        }
+
+        // Defensive: bomb_defused can only fire for an active CT, but guard explicitly
+        // so any future regression has a clear team-exclusion barrier.
+        if (controller.Team != CStrikeTeam.CT)
+        {
+            return;
+        }
+
+        if (_playerManager.GetPlayerRankInfo(controller.PlayerSlot) is not { } rankInfo)
         {
             return;
         }
