@@ -77,6 +77,11 @@ internal class ScoreModule : IModule, IScoreModule
     {
         get
         {
+            if (_bridge.GameRules.IsWarmupPeriod)
+            {
+                return false;
+            }
+
             var minPlayers = _minPlayers.GetInt32();
 
             if (minPlayers <= 0)

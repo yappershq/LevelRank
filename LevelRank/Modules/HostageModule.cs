@@ -42,6 +42,11 @@ internal class HostageModule : IModule
 
     private void OnHostageRescured(IGameEvent e)
     {
+        if (!_scoreModule.IsRankEnabled)
+        {
+            return;
+        }
+
         if (e.GetPlayerController("userid") is not { } controller)
         {
             return;
